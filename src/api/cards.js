@@ -47,8 +47,9 @@ export function updateCard(id, payload) {
   });
 }
 
-export function deleteCard(id) {
+export function deleteCard(id, password) {
   return request(`/api/cards/${id}`, {
     method: "DELETE",
+    body: JSON.stringify({ password }),
   });
 }

@@ -5,6 +5,7 @@ export default function CardModal({
   mode,
   form,
   saving,
+  error,
   onChange,
   onClose,
   onSubmit,
@@ -37,7 +38,17 @@ export default function CardModal({
         <h2 className="text-xl font-semibold tracking-tight">
           {mode === "edit" ? "카드 수정" : "새 카드"}
         </h2>
-        <p className="mt-1 text-sm text-stone-500">제목과 내용을 작성해 주세요.</p>
+        <p className="mt-1 text-sm text-stone-500">
+          {mode === "edit"
+            ? "수정하려면 등록 시 정한 비밀번호가 필요합니다."
+            : "제목, 내용, 비밀번호를 작성해 주세요."}
+        </p>
+
+        {error && (
+          <p className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {error}
+          </p>
+        )}
 
         <label className="mt-6 block text-sm font-medium text-stone-700">
           제목
@@ -62,6 +73,18 @@ export default function CardModal({
           />
         </label>
 
+        <label className="mt-4 block text-sm font-medium text-stone-700">
+          비밀번호
+          <input
+            type="password"
+            autoComplete="off"
+            value={form.password}
+            onChange={(event) => onChange({ ...form, password: event.target.value })}
+            className="mt-2 w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 outline-none transition focus:border-amber-400 focus:bg-white focus:ring-4 focus:ring-amber-100"
+            placeholder={mode === "edit" ? "등록 시 정한 비밀번호" : "카드 비밀번호"}
+          />
+        </label>
+
         <div className="mt-6 flex justify-end gap-2">
           <button
             type="button"
@@ -72,7 +95,7 @@ export default function CardModal({
           </button>
           <button
             type="submit"
-            disabled={saving || !form.title.trim()}
+            disabled={saving || !form.title.trim() || !form.password}
             className="rounded-full bg-stone-900 px-5 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
             {saving ? "저장 중..." : "저장"}

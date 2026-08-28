@@ -2,23 +2,34 @@ import { useEffect, useState } from "react";
 import { createCard, deleteCard, getCards, updateCard } from "./api/cards";
 import CardItem from "./components/CardItem";
 import CardModal from "./components/CardModal";
+import DeleteModal from "./components/DeleteModal";
 
-const emptyForm = { title: "", content: "" };
+const emptyForm = { title: "", content: "", password: "" };
+
+function withoutPassword(card) {
+  if (!card || typeof card !== "object") return card;
+  const { password: _password, ...rest } = card;
+  return rest;
+}
 
 export default function App() {
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [formError, setFormError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(null);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteSaving, setDeleteSaving] = useState(false);
 
   async function loadCards() {
     try {
       setError("");
       const data = await getCards();
-      setCards(data);
+      setCards((Array.isArray(data) ? data : []).map(withoutPassword));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -33,47 +44,80 @@ export default function App() {
   function openCreate() {
     setEditing(null);
     setForm(emptyForm);
+    setFormError("");
     setModalOpen(true);
   }
 
   function openEdit(card) {
     setEditing(card);
-    setForm({ title: card.title, content: card.content });
+    setForm({ title: card.title, content: card.content, password: "" });
+    setFormError("");
     setModalOpen(true);
+  }
+
+  function closeModal() {
+    setModalOpen(false);
+    setForm(emptyForm);
+    setEditing(null);
+    setFormError("");
+  }
+
+  function openDelete(card) {
+    setDeleting(card);
+    setDeletePassword("");
+    setFormError("");
+  }
+
+  function closeDelete() {
+    setDeleting(null);
+    setDeletePassword("");
+    setFormError("");
   }
 
   async function handleSubmit(event) {
     event.preventDefault();
     setSaving(true);
-    setError("");
+    setFormError("");
+
+    const payload = {
+      title: form.title,
+      content: form.content,
+      password: form.password,
+    };
 
     try {
       if (editing) {
-        const updated = await updateCard(editing.id, form);
-        setCards((prev) => prev.map((card) => (card.id === updated.id ? updated : card)));
+        const updated = await updateCard(editing.id, payload);
+        setCards((prev) =>
+          prev.map((card) => (card.id === updated.id ? withoutPassword(updated) : card)),
+        );
       } else {
-        const created = await createCard(form);
-        setCards((prev) => [created, ...prev]);
+        const created = await createCard(payload);
+        setCards((prev) => [withoutPassword(created), ...prev]);
       }
-      setModalOpen(false);
-      setForm(emptyForm);
-      setEditing(null);
+      closeModal();
     } catch (err) {
-      setError(err.message);
+      setFormError(err.message);
     } finally {
       setSaving(false);
     }
   }
 
-  async function handleDelete(card) {
-    const confirmed = window.confirm(`"${card.title}" 카드를 삭제할까요?`);
-    if (!confirmed) return;
+  async function handleDelete(event) {
+    event.preventDefault();
+    if (!deleting) return;
+
+    setDeleteSaving(true);
+    setFormError("");
 
     try {
-      await deleteCard(card.id);
-      setCards((prev) => prev.filter((item) => item.id !== card.id));
+      await deleteCard(deleting.id, deletePassword);
+      setCards((prev) => prev.filter((item) => item.id !== deleting.id));
+      closeDelete();
     } catch (err) {
-      setError(err.message);
+      setFormError(err.message);
+    } finally {
+      setDeleteSaving(false);
     }
   }
 
@@ -133,7 +177,7 @@ export default function App() {
                 key={card.id}
                 card={card}
                 onEdit={openEdit}
-                onDelete={handleDelete}
+                onDelete={openDelete}
               />
             ))}
           </section>
@@ -145,9 +189,21 @@ export default function App() {
         mode={editing ? "edit" : "create"}
         form={form}
         saving={saving}
+        error={formError}
         onChange={setForm}
-        onClose={() => setModalOpen(false)}
+        onClose={closeModal}
         onSubmit={handleSubmit}
+      />
+
+      <DeleteModal
+        open={Boolean(deleting)}
+        card={deleting}
+        password={deletePassword}
+        saving={deleteSaving}
+        error={formError}
+        onPasswordChange={setDeletePassword}
+        onClose={closeDelete}
+        onSubmit={handleDelete}
       />
     </div>
   );
