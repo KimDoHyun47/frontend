@@ -30,11 +30,11 @@ async function request(path, options = {}) {
 }
 
 export function getCards() {
-  return request("cards");
+  return request("/cards");
 }
 
 export function createCard(payload) {
-  return request("cards", {
+  return request("/cards", {
     method: "POST",
     body: JSON.stringify(payload),
   });
