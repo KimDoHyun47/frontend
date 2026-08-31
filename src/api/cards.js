@@ -1,4 +1,4 @@
-const VITE_API_URL = (import.meta.env.VITE_API_URL || "http://localhost:4000").replace(/\/$/, "");
+const VITE_API_URL = (import.meta.env.VITE_API_URL || "http://localhost:4001").replace(/\/$/, "");
 
 async function request(path, options = {}) {
   let response;
@@ -30,25 +30,25 @@ async function request(path, options = {}) {
 }
 
 export function getCards() {
-  return request("/api/cards");
+  return request("cards");
 }
 
 export function createCard(payload) {
-  return request("/api/cards", {
+  return request("cards", {
     method: "POST",
     body: JSON.stringify(payload),
   });
 }
 
 export function updateCard(id, payload) {
-  return request(`/api/cards/${id}`, {
+  return request(`/cards/${id}`, {
     method: "PUT",
     body: JSON.stringify(payload),
   });
 }
 
 export function deleteCard(id, password) {
-  return request(`/api/cards/${id}`, {
+  return request(`/cards/${id}`, {
     method: "DELETE",
     body: JSON.stringify({ password }),
   });
