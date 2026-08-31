@@ -4,7 +4,6 @@ async function request(path, options = {}) {
   let response;
 
   try {
-    console.log(`${VITE_API_URL}`);
     response = await fetch(`${VITE_API_URL}${path}`, {
       headers: {
         "Content-Type": "application/json",

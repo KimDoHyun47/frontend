@@ -7,5 +7,12 @@ export default defineConfig({
   envPrefix: ["VITE_", "API_"],
   server: {
     port: 5173,
+    proxy: {
+      "/api": {
+        target: "http://localhost:4001",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ""),
+      },
+    },
   },
 });
